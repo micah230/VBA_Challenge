@@ -1,0 +1,120 @@
+
+
+Sub VBA_Challenge()
+
+    Dim ws As Worksheet
+    For Each ws In ThisWorkbook.Worksheets
+
+    'Initial setup
+    Dim lastRow As LongLong
+    lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+    Dim x As LongLong
+    Dim y As LongLong
+    Dim z As LongLong
+    y = 2
+
+    'Compile and list stock names
+
+    For x = 1 To lastRow
+    If Not ws.Cells(x, 1).Value = ws.Cells(x + 1, 1).Value Then
+    ws.Cells(y, 9).Value = ws.Cells(x + 1, 1).Value
+    y = y + 1
+    End If
+    Next x
+
+    ' Compile and list stock volumes
+
+    y = 2
+    For z = 2 To lastRow
+    If ws.Cells(z, 1).Value = ws.Cells(y, 9).Value Then
+    ws.Cells(y, 12).Value = ws.Cells(y, 12).Value + ws.Cells(z, 7).Value
+    Else
+    y = y + 1
+    ws.Cells(y, 12).Value = ws.Cells(z, 7).Value
+    End If
+    Next z
+
+    'Cleanup and formatting
+
+    ws.Range("i1").Value = "Ticker"
+    ws.Range("j1").Value = "Quarterly Change"
+    ws.Range("k1").Value = "Percent Change"
+    ws.Range("l1").Value = "Total Stock Volume"
+    ws.Columns("j:l").AutoFit
+
+    'Finding Quarterly start and end values
+
+    Dim lastDate As LongLong
+    Dim i As LongLong, j As LongLong, k As LongLong
+    j = 0
+    k = 0
+    lastDate = ws.Cells(ws.Rows.Count, "B").End(xlUp).Row
+    For i = 1 To lastDate
+    If ws.Cells(i, 2).Value = "3/31/2022" Or ws.Cells(i, 2).Value = "6/30/2022" Or ws.Cells(i, 2).Value = "9/30/2022" Or ws.Cells(i, 2).Value = "12/31/2022" Then
+    j = j + 1
+    ws.Cells(j + 1, 14).Value = ws.Cells(i, 6).Value
+    ElseIf ws.Cells(i, 2).Value = "1/2/2022" Or ws.Cells(i, 2).Value = "4/1/2022" Or ws.Cells(i, 2).Value = "7/1/2022" Or ws.Cells(i, 2).Value = "10/1/2022" Then
+    k = k + 1
+    ws.Cells(k + 1, 13).Value = ws.Cells(i, 3).Value
+    End If
+    Next i
+
+    'Finding and formatting Quarterly Change and Percent Change
+
+    Dim lastticker As LongLong
+    lastticker = ws.Cells(ws.Rows.Count, "I").End(xlUp).Row
+    Dim l As LongLong
+    For l = 2 To lastticker
+    ws.Cells(l, 11).Value = (ws.Cells(l, 14).Value - ws.Cells(l, 13).Value) / ws.Cells(l, 13).Value
+    ws.Cells(l, 10).Value = ws.Cells(l, 14).Value - ws.Cells(l, 13).Value
+    If ws.Cells(l, 10).Value > 0 Then
+    ws.Cells(l, 10).Interior.ColorIndex = 4
+    ElseIf ws.Cells(l, 10).Value < 0 Then
+    ws.Cells(l, 10).Interior.ColorIndex = 3
+    End If
+    Next l
+    Columns("K:K").NumberFormat = "0.00%"
+
+   'Cleanup and formatting for highest and lowest
+
+    ws.Columns("N").ClearContents
+    ws.Columns("M").ClearContents
+    ws.Range("n2").Value = "Greatest % Increase"
+    ws.Range("n3").Value = "Greatest % Decrease"
+    ws.Range("n4").Value = "Greatest Total Volume"
+    ws.Range("o1").Value = "Ticker"
+    ws.Range("p1").Value = "Value"
+
+    'Finding highest and lowest values
+
+    Dim lastpercentage As LongLong
+    lastpercentage = ws.Cells(ws.Rows.Count, "K").End(xlUp).Row
+    Dim percentage As Range
+    Set percentage = ws.Range("k2:K" & lastpercentage)
+    ws.Range("p2").Value = WorksheetFunction.Max(percentage)
+    ws.Range("p3").Value = WorksheetFunction.Min(percentage)
+
+    ws.Range("P2:P3").NumberFormat = "0.00%"
+
+    Dim lasttotal As LongLong
+    lasttotal = ws.Cells(ws.Rows.Count, "L").End(xlUp).Row
+    Dim total As Range
+    Set total = ws.Range("l2:l" & lasttotal)
+    ws.Range("p4").Value = WorksheetFunction.Max(total)
+
+    'Finding matching Tickers
+
+    Dim m As LongLong
+    For m = 2 To lastpercentage
+    If ws.Cells(m, 11).Value = ws.Range("p2").Value Then
+    ws.Range("o2").Value = ws.Cells(m, 9).Value
+    ElseIf ws.Cells(m, 11).Value = ws.Range("p3").Value Then
+    ws.Range("o3").Value = ws.Cells(m, 9).Value
+    ElseIf ws.Cells(m, 12).Value = ws.Range("p4").Value Then
+    ws.Range("o4").Value = ws.Cells(m, 9).Value
+    End If
+    Next m
+    ws.Columns("m:p").AutoFit
+    Next ws
+
+End Sub
